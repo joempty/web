@@ -6,6 +6,6 @@ namespace Business
 {
     public class DenemeClass
     {
-        //Deneme Class
+        public int asd{ get; set; }
     }
 }
