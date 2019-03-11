@@ -328,3 +328,43 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+# Starter Template
+
+.DS_Store
+npm-debug.log
+
+/Properties/launchSettings.json
+
+package-lock.json
+
+build/
+bin/
+obj/
+
+# Visual Studio 2015 cache/options directory
+/wwwroot/dist/**
+
+# Workaround for https://github.com/aspnet/JavaScriptServices/issues/235
+!/wwwroot/dist/_placeholder.txt
+
+/yarn.lock
+
+# DNX
+
+# TODO: Comment the next line if you want to checkin your web deploy settings
+
+**/packages/*
+!**/packages/build/
+#!**/packages/repositories.config
+
+
+# Microsoft Azure ApplicationInsights config file
+ApplicationInsights.config
+
+# Windows Store app package directory
+
+/node_modules/**
+!/node_modules/_placeholder.txt
+
+.vscode/
