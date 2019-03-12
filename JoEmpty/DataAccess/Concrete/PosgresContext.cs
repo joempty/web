@@ -7,10 +7,11 @@ using System.Text;
 
 namespace DataAccess.Concrete
 {
-    public class PosgresContext : IdentityDbContext<User>
+    public class PosgresContext : DbContext
     {
-        public PosgresContext(DbContextOptions options) : base(options)
+       protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            optionsBuilder.UseNpgsql("@Server:159.89.108.208;Port=5432;Database=joempty;User Id=postgres;Password=123456");
         }
     }
 }
