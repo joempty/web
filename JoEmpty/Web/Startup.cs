@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.Webpack;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -22,12 +23,15 @@ namespace Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add dbcontext services.
+            services.AddDbContext<CustomIdentityContext>(
+
+                options => options.UseNpgsql("Server=159.89.108.208;Port=5432;Database=joempty;User Id=postgres;Password=123456")
+                );
 
             #region Identity
 
             services.AddDefaultIdentity<User>()
-              //.AddEntityFrameworkStores<>()
+               .AddEntityFrameworkStores<CustomIdentityContext>()
                 .AddDefaultTokenProviders();
 
             services.Configure<IdentityOptions>(options =>
