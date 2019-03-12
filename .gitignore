@@ -368,3 +368,6 @@ ApplicationInsights.config
 !/node_modules/_placeholder.txt
 
 .vscode/
+
+JoEmpty/Web/wwwroot/dist/main.js.map
+JoEmpty/Web/wwwroot/dist/main.js
