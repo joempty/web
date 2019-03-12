@@ -1,11 +1,11 @@
 <template>
     <!-- Layout wrapper -->
-    <div class="layout-wrapper layout-1">
+    <div class="layout-wrapper layout-2">
         <!-- Layout inner -->
         <div class="layout-inner">
-            <nav-bar></nav-bar>
-            <div class="layout-container" id="app">
             <nav-menu params="route: route"></nav-menu>
+            <div class="layout-container" id="app">
+                <nav-bar></nav-bar>
                 <!-- Page content -->
                 <div class="layout-content">
                     <div class="container-fluid flex-grow-1 container-p-y">

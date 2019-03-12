@@ -1,22 +1,33 @@
 <template>
     <div>
-        <!-- Layout navbar -->
-        <nav class="layout-navbar navbar navbar-expand-lg align-items-lg-center bg-navbar-theme container-p-x" id="layout-navbar">
-            <a href="index.html" class="navbar-brand">JOVASOFT</a>
-
-            <!-- Sidenav toggle -->
-            <div class="layout-sidenav-toggle navbar-nav align-items-lg-center mr-auto mr-lg-4">
-                <a class="nav-item nav-link px-0 ml-2" href="javascript:void(0)">
-                <i class="ion ion-md-menu text-large align-middle"></i>
-                </a>
-            </div>
-
-            <!-- Navbar toggle -->
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#layout-navbar-collapse">
+        <nav class="navbar navbar-expand-lg bg-navbar-theme">
+              <a class="navbar-brand" href="javascript:void(0)">Navbar</a>
+              <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-example-16">
                 <span class="navbar-toggler-icon"></span>
-            </button>
+              </button>
 
-        </nav>
-        <!-- / Layout navbar -->
+              <div class="collapse navbar-collapse" id="navbar-example-16">
+                <ul class="navbar-nav align-items-lg-center mr-auto">
+                  <li class="nav-item active">
+                    <a class="nav-link" href="javascript:void(0)">Home</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="javascript:void(0)">Features</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="javascript:void(0)">Pricing</a>
+                  </li>
+                  <li class="nav-item">
+                    <label class="nav-link navbar-search-box active">
+                      <i class="ion ion-ios-search navbar-icon align-middle"></i>
+                      <span class="navbar-search-input">
+                        <input type="text" class="form-control mx-2" placeholder="Search..." style="width:140px">
+                        <a href="javascript:void(0)" class="navbar-search-cancel">×</a>
+                      </span>
+                    </label>
+                  </li>
+                </ul>
+              </div>
+            </nav>
     </div>
 </template>
