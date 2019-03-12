@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Entities.Concrete
 {
-    public class Account : IdentityUser
+    public class User : IdentityUser
     {
     }
 }

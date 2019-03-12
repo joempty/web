@@ -7,7 +7,7 @@ using System.Text;
 
 namespace DataAccess.Concrete
 {
-    public class PosgresContext : IdentityDbContext<Account>
+    public class PosgresContext : IdentityDbContext<User>
     {
         public PosgresContext(DbContextOptions options) : base(options)
         {

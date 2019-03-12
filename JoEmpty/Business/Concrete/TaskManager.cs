@@ -8,12 +8,12 @@ namespace Business.Concrete
 {
     public class TaskManager : ITaskService
     {
-        public void Add(Task task)
+        public void Add(UserTask task)
         {
             //add to database
         }
 
-        public List<Task> ListAll()
+        public List<UserTask> ListAll()
         {
             //retun list from database
             return null;
