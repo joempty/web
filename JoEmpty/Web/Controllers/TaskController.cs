@@ -11,7 +11,7 @@ namespace Web.Controllers
     {
         [HttpGet]
         public JsonResult Get()
-        {
+        {//test
             return Json(new { status = "ok", message = "success" });
         }
 
