@@ -59,6 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
+/******/ 	var hotCurrentHash = "7079e75b05b965ecfb5c"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -1176,7 +1177,7 @@ module.exports = function (it) {
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, setImmediate) {/*!
- * Vue.js v2.6.8
+ * Vue.js v2.6.9
  * (c) 2014-2019 Evan You
  * Released under the MIT License.
  */
@@ -3038,10 +3039,11 @@ module.exports = function (it) {
     var res;
     try {
       res = args ? handler.apply(context, args) : handler.call(context);
-      if (res && !res._isVue && isPromise(res)) {
+      if (res && !res._isVue && isPromise(res) && !res._handled) {
+        res.catch(function (e) { return handleError(e, vm, info + " (Promise/async)"); });
         // issue #9511
-        // reassign to res to avoid catch triggering multiple times when nested calls
-        res = res.catch(function (e) { return handleError(e, vm, info + " (Promise/async)"); });
+        // avoid catch triggering multiple times when nested calls
+        res._handled = true;
       }
     } catch (e) {
       handleError(e, vm, info);
@@ -3725,6 +3727,7 @@ module.exports = function (it) {
   ) {
     var res;
     var isStable = slots ? !!slots.$stable : true;
+    var hasNormalSlots = Object.keys(normalSlots).length > 0;
     var key = slots && slots.$key;
     if (!slots) {
       res = {};
@@ -3736,7 +3739,8 @@ module.exports = function (it) {
       prevSlots &&
       prevSlots !== emptyObject &&
       key === prevSlots.$key &&
-      Object.keys(normalSlots).length === 0
+      !hasNormalSlots &&
+      !prevSlots.$hasNormal
     ) {
       // fast path 2: stable scoped slots w/ no normal slots to proxy,
       // only need to normalize once
@@ -3762,6 +3766,7 @@ module.exports = function (it) {
     }
     def(res, '$stable', isStable);
     def(res, '$key', key);
+    def(res, '$hasNormal', hasNormalSlots);
     return res
   }
 
@@ -3771,8 +3776,10 @@ module.exports = function (it) {
       res = res && typeof res === 'object' && !Array.isArray(res)
         ? [res] // single vnode
         : normalizeChildren(res);
-      return res && res.length === 0
-        ? undefined
+      return res && (
+        res.length === 0 ||
+        (res.length === 1 && res[0].isComment) // #9658
+      ) ? undefined
         : res
     };
     // this is a slot using the new v-slot syntax without scope. although it is
@@ -3952,12 +3959,13 @@ module.exports = function (it) {
               : data.attrs || (data.attrs = {});
           }
           var camelizedKey = camelize(key);
-          if (!(key in hash) && !(camelizedKey in hash)) {
+          var hyphenatedKey = hyphenate(key);
+          if (!(camelizedKey in hash) && !(hyphenatedKey in hash)) {
             hash[key] = value[key];
 
             if (isSync) {
               var on = data.on || (data.on = {});
-              on[("update:" + camelizedKey)] = function ($event) {
+              on[("update:" + key)] = function ($event) {
                 value[key] = $event;
               };
             }
@@ -4792,7 +4800,7 @@ module.exports = function (it) {
     }
 
     var owner = currentRenderingInstance;
-    if (isDef(factory.owners) && factory.owners.indexOf(owner) === -1) {
+    if (owner && isDef(factory.owners) && factory.owners.indexOf(owner) === -1) {
       // already pending
       factory.owners.push(owner);
     }
@@ -4801,7 +4809,7 @@ module.exports = function (it) {
       return factory.loadingComp
     }
 
-    if (!isDef(factory.owners)) {
+    if (owner && !isDef(factory.owners)) {
       var owners = factory.owners = [owner];
       var sync = true
 
@@ -5416,10 +5424,15 @@ module.exports = function (it) {
   // timestamp can either be hi-res (relative to page load) or low-res
   // (relative to UNIX epoch), so in order to compare time we have to use the
   // same timestamp type when saving the flush timestamp.
-  if (inBrowser && getNow() > document.createEvent('Event').timeStamp) {
-    // if the low-res timestamp which is bigger than the event timestamp
-    // (which is evaluated AFTER) it means the event is using a hi-res timestamp,
-    // and we need to use the hi-res version for event listeners as well.
+  if (
+    inBrowser &&
+    window.performance &&
+    typeof performance.now === 'function' &&
+    document.createEvent('Event').timeStamp <= performance.now()
+  ) {
+    // if the event timestamp is bigger than the hi-res timestamp
+    // (which is evaluated AFTER) it means the event is using a lo-res timestamp,
+    // and we need to use the lo-res version for event listeners as well.
     getNow = function () { return performance.now(); };
   }
 
@@ -6585,7 +6598,7 @@ module.exports = function (it) {
     value: FunctionalRenderContext
   });
 
-  Vue.version = '2.6.8';
+  Vue.version = '2.6.9';
 
   /*  */
 
@@ -8677,8 +8690,10 @@ module.exports = function (it) {
           e.target === e.currentTarget ||
           // event is fired after handler attachment
           e.timeStamp >= attachedTimestamp ||
-          // #9462 bail for iOS 9 bug: event.timeStamp is 0 after history.pushState
-          e.timeStamp === 0 ||
+          // bail for environments that have buggy event.timeStamp implementations
+          // #9462 iOS 9 bug: event.timeStamp is 0 after history.pushState
+          // #9681 QtWebEngine event.timeStamp is negative value
+          e.timeStamp <= 0 ||
           // #9448 bail if event is fired in another document in a multi-page
           // electron/nw.js app, since event.timeStamp will be using a different
           // starting reference
@@ -9296,8 +9311,8 @@ module.exports = function (it) {
     var context = activeInstance;
     var transitionNode = activeInstance.$vnode;
     while (transitionNode && transitionNode.parent) {
-      transitionNode = transitionNode.parent;
       context = transitionNode.context;
+      transitionNode = transitionNode.parent;
     }
 
     var isAppear = !context._isMounted || !vnode.isRootInsert;
@@ -11004,7 +11019,7 @@ module.exports = function (it) {
           text = preserveWhitespace ? ' ' : '';
         }
         if (text) {
-          if (whitespaceOption === 'condense') {
+          if (!inPre && whitespaceOption === 'condense') {
             // condense consecutive whitespaces into single space
             text = text.replace(whitespaceRE$1, ' ');
           }
@@ -13694,7 +13709,7 @@ exports.push([module.i, ".sidenav .app-brand {\r\n    height: 57px;\r\n  }", ""]
 
 
 /***/ }),
-/* 47 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(30)();
@@ -13708,7 +13723,7 @@ exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\
 
 
 /***/ }),
-/* 48 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(30)();
@@ -13717,6 +13732,20 @@ exports = module.exports = __webpack_require__(30)();
 
 // module
 exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", "", {"version":3,"sources":[],"names":[],"mappings":"","file":"app-root.vue","sourceRoot":""}]);
+
+// exports
+
+
+/***/ }),
+/* 48 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(30)();
+// imports
+
+
+// module
+exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", "", {"version":3,"sources":[],"names":[],"mappings":"","file":"home-page.vue","sourceRoot":""}]);
 
 // exports
 
@@ -20864,58 +20893,6 @@ if (true) {(function () {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__node_modules_vue_loader_lib_template_compiler_index_id_data_v_4f94bb17_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_nav_bar_vue__ = __webpack_require__(193);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_runtime_component_normalizer__ = __webpack_require__(31);
-var disposed = false
-/* script */
-var __vue_script__ = null
-/* template */
-
-/* template functional */
-var __vue_template_functional__ = false
-/* styles */
-var __vue_styles__ = null
-/* scopeId */
-var __vue_scopeId__ = null
-/* moduleIdentifier (server only) */
-var __vue_module_identifier__ = null
-
-var Component = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_lib_runtime_component_normalizer__["a" /* default */])(
-  __vue_script__,
-  __WEBPACK_IMPORTED_MODULE_0__node_modules_vue_loader_lib_template_compiler_index_id_data_v_4f94bb17_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_nav_bar_vue__["a" /* render */],
-  __WEBPACK_IMPORTED_MODULE_0__node_modules_vue_loader_lib_template_compiler_index_id_data_v_4f94bb17_hasScoped_false_optionsId_0_buble_transforms_node_modules_vue_loader_lib_selector_type_template_index_0_nav_bar_vue__["b" /* staticRenderFns */],
-  __vue_template_functional__,
-  __vue_styles__,
-  __vue_scopeId__,
-  __vue_module_identifier__
-)
-Component.options.__file = "ClientApp\\components\\nav-bar.vue"
-
-/* hot reload */
-if (true) {(function () {
-  var hotAPI = __webpack_require__(5)
-  hotAPI.install(__webpack_require__(10), false)
-  if (!hotAPI.compatible) return
-  module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-4f94bb17", Component.options)
-  } else {
-    hotAPI.reload("data-v-4f94bb17", Component.options)
-  }
-  module.hot.dispose(function (data) {
-    disposed = true
-  })
-})()}
-
-/* harmony default export */ __webpack_exports__["default"] = (Component.exports);
-
-
-/***/ }),
-/* 190 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_nav_menu_vue__ = __webpack_require__(54);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_nav_menu_vue___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_nav_menu_vue__);
 /* harmony namespace reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_nav_menu_vue__) if(["default","default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_lib_selector_type_script_index_0_nav_menu_vue__[key]; }) }(__WEBPACK_IMPORT_KEY__));
@@ -21107,6 +21084,107 @@ var staticRenderFns = [
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
     return _c("div", [
+      _c("nav", { staticClass: "navbar navbar-expand-lg bg-navbar-theme" }, [
+        _c(
+          "a",
+          {
+            staticClass: "navbar-brand",
+            attrs: { href: "javascript:void(0)" }
+          },
+          [_vm._v("Navbar")]
+        ),
+        _vm._v(" "),
+        _c(
+          "button",
+          {
+            staticClass: "navbar-toggler",
+            attrs: {
+              type: "button",
+              "data-toggle": "collapse",
+              "data-target": "#navbar-example-16"
+            }
+          },
+          [_c("span", { staticClass: "navbar-toggler-icon" })]
+        ),
+        _vm._v(" "),
+        _c(
+          "div",
+          {
+            staticClass: "collapse navbar-collapse",
+            attrs: { id: "navbar-example-16" }
+          },
+          [
+            _c(
+              "ul",
+              { staticClass: "navbar-nav align-items-lg-center mr-auto" },
+              [
+                _c("li", { staticClass: "nav-item active" }, [
+                  _c(
+                    "a",
+                    {
+                      staticClass: "nav-link",
+                      attrs: { href: "javascript:void(0)" }
+                    },
+                    [_vm._v("Home")]
+                  )
+                ]),
+                _vm._v(" "),
+                _c("li", { staticClass: "nav-item" }, [
+                  _c(
+                    "a",
+                    {
+                      staticClass: "nav-link",
+                      attrs: { href: "javascript:void(0)" }
+                    },
+                    [_vm._v("Features")]
+                  )
+                ]),
+                _vm._v(" "),
+                _c("li", { staticClass: "nav-item" }, [
+                  _c(
+                    "a",
+                    {
+                      staticClass: "nav-link",
+                      attrs: { href: "javascript:void(0)" }
+                    },
+                    [_vm._v("Pricing")]
+                  )
+                ]),
+                _vm._v(" "),
+                _c("li", { staticClass: "nav-item" }, [
+                  _c(
+                    "label",
+                    { staticClass: "nav-link navbar-search-box active" },
+                    [
+                      _c("i", {
+                        staticClass:
+                          "ion ion-ios-search navbar-icon align-middle"
+                      }),
+                      _vm._v(" "),
+                      _c("span", { staticClass: "navbar-search-input" }, [
+                        _c("input", {
+                          staticClass: "form-control mx-2",
+                          staticStyle: { width: "140px" },
+                          attrs: { type: "text", placeholder: "Search..." }
+                        }),
+                        _vm._v(" "),
+                        _c(
+                          "a",
+                          {
+                            staticClass: "navbar-search-cancel",
+                            attrs: { href: "javascript:void(0)" }
+                          },
+                          [_vm._v("×")]
+                        )
+                      ])
+                    ]
+                  )
+                ])
+              ]
+            )
+          ]
+        )
+      ])
     ])
   }
 ]
