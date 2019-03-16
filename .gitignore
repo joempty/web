@@ -369,5 +369,7 @@ ApplicationInsights.config
 
 .vscode/
 
-JoEmpty/Web/wwwroot/dist/main.js.map
-JoEmpty/Web/wwwroot/dist/main.js
+**/wwwroot/dist/
+
+
+appsettings.json

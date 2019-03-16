@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Entities.Migrations
 {
     [DbContext(typeof(CustomIdentityContext))]
-    [Migration("20190312182227_Create-Identity-Tables")]
+    [Migration("20190316034519_Create-Identity-Tables")]
     partial class CreateIdentityTables
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

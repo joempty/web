@@ -23,10 +23,8 @@ namespace Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<CustomIdentityContext>(
-
-                options => options.UseNpgsql("Server=159.89.108.208;Port=5432;Database=joempty;User Id=postgres;Password=123456")
-                );
+            services.AddDbContext<CustomIdentityContext>( options => options.UseNpgsql(Configuration["ConnectionStrings:DbConnection"]) );
+            services.AddSingleton(Configuration);
 
             #region Identity
 
@@ -50,7 +48,7 @@ namespace Web
                 options.Lockout.AllowedForNewUsers = true;
 
                 // User settings.
-                options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._";
+                options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
                 options.User.RequireUniqueEmail = false;
             });
 
