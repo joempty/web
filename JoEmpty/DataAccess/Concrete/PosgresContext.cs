@@ -11,6 +11,8 @@ namespace DataAccess.Concrete
     public class PosgresContext : DbContext
     {
 
+        public DbSet<UserTask> userTasks { get; set; }
+
         private IConfiguration configuration;
 
         public PosgresContext(IConfiguration _configuration)
