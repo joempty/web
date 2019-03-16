@@ -369,7 +369,9 @@ ApplicationInsights.config
 
 .vscode/
 
-**/wwwroot/dist/
-
+**/wwwroot/dist/main.js
+**/wwwroot/dist/main.js.map
+**/wwwroot/dist/vendor.css
+**/wwwroot/dist/vendor.js
 
 appsettings.json
