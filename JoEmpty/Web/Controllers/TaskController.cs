@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Entities.Concrete;
 using Microsoft.AspNetCore.Mvc;
+using Web.Models;
 
 namespace Web.Controllers
 {
@@ -11,13 +12,20 @@ namespace Web.Controllers
     {
         [HttpGet]
         public JsonResult Get()
-        {//test
+        {
             return Json(new { status = "ok", message = "success" });
         }
 
         [HttpPost]
-        public JsonResult List()
+        public JsonResult Post(TaskModel model)
         {
+            UserTask userTask = new UserTask
+            {
+                CreatedDate = DateTime.Now,
+            };
+
+            //check
+
             return Json(new { status = "ok", message = "success" });
         }
     }

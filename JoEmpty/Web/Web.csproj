@@ -14,7 +14,6 @@
     <Content Remove="ClientApp\**" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Models\" />
     <Folder Include="Providers\" />
     <Folder Include="wwwroot\assets\" />
   </ItemGroup>

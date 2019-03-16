@@ -21,13 +21,13 @@ module.exports = () => {
         'views': path.resolve(__dirname, './ClientApp/views'),
         'utils': path.resolve(__dirname, './ClientApp/utils'),
         'api': path.resolve(__dirname, './ClientApp/store/api'),
-        'base': path.resolve(__dirname, './')
+        'services': path.resolve(__dirname, './ClientApp/services')
       } : {
         'components': path.resolve(__dirname, './ClientApp/components'),
         'views': path.resolve(__dirname, './ClientApp/views'),
         'utils': path.resolve(__dirname, './ClientApp/utils'),
         'api': path.resolve(__dirname, './ClientApp/store/api'),
-        'base': path.resolve(__dirname, './')
+        'services': path.resolve(__dirname, './ClientApp/services')
       }
     },
     output: {
